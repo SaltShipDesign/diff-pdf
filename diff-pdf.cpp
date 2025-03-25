@@ -249,9 +249,10 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 int marker_pixels = (10 < r2.width ? 10 : r2.width);
                 for (int x = 0; x < marker_pixels * 4; x += 4)
                 {
-                    *(out + x + 0) = 0;    // blue channel = 0
-                    *(out + x + 1) = 0;  // green channel = 0
+                    *(out + x + 0) = 147;    // blue channel = 147
+                    *(out + x + 1) = 20;  // green channel = 20
                     *(out + x + 2) = 255;    // red channel = 255
+                    //pink color
                 }
             }
         }
