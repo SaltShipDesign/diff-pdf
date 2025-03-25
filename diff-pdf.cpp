@@ -243,15 +243,15 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 }
             }
 
-            // Optionally, mark the first few pixels of any row with differences with green 200.
+            // Optionally, mark the first few pixels of any row with differences with red 255.
             if (g_mark_differences && linediff)
             {
                 int marker_pixels = (10 < r2.width ? 10 : r2.width);
                 for (int x = 0; x < marker_pixels * 4; x += 4)
                 {
                     *(out + x + 0) = 0;    // blue channel = 0
-                    *(out + x + 1) = 200;  // green channel = 200
-                    *(out + x + 2) = 0;    // red channel = 0
+                    *(out + x + 1) = 0;  // green channel = 0
+                    *(out + x + 2) = 255;    // red channel = 255
                 }
             }
         }
