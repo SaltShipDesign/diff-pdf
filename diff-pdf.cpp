@@ -186,9 +186,8 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
     if ( s2 )
     {
         unsigned char *out = datadiff + r2.y * stridediff + r2.x * 4;
-        for ( int y = 0;
-              y < r2.height;
-              y++, data2 += stride2, out += stridediff )
+        // In diff_images, inside the loop comparing s2’s pixels:
+        for ( int y = 0; y < r2.height; y++, data2 += stride2, out += stridediff )
         {
             bool linediff = false;
 
@@ -217,14 +216,12 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                         int tx = int((r2.x + x/4.0) * thumbnail_scale);
                         int ty = int((r2.y + y) * thumbnail_scale);
 
-                        // Limit the coordinates to the thumbnail size (may be
-                        // off slightly due to rounding errors).
-                        // See https://github.com/vslavik/diff-pdf/pull/58
+                        // Limit the coordinates to the thumbnail size.
                         tx = std::min(tx, thumbnail_width - 1);
                         ty = std::min(ty, thumbnail_height - 1);
 
-                        // mark changes with red
-                        thumbnail->SetRGB(tx, ty, 255, 0, 0);
+                        // mark changes with yellow instead of red
+                        thumbnail->SetRGB(tx, ty, 255, 255, 0);
                     }
                 }
 
@@ -244,13 +241,14 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 }
             }
 
+            // Change the marker from cyan to yellow.
             if (g_mark_differences && linediff)
             {
-                for (int x = 0; x < (10 < r2.width ? 10 : r2.width) * 4; x+=4)
+                for (int x = 0; x < (10 < r2.width ? 10 : r2.width) * 4; x += 4)
                 {
-                   *(out + x + 0) = 0;
-                   *(out + x + 1) = 255; //0;
-                   *(out + x + 2) = 0; //255;
+                   *(out + x + 0) = 0;    // Blue channel: 0
+                   *(out + x + 1) = 255;  // Green channel: 255
+                   *(out + x + 2) = 255;  // Red channel: 255   -> Results in yellow (RGB 255,255,0)
                 }
             }
         }
