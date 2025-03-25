@@ -202,10 +202,10 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 unsigned char cg2 = *(data2 + x + 1);
                 unsigned char cb2 = *(data2 + x + 2);
 
-                bool diffPixel = ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
-                                 || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
-                                 || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance) );
-                if ( diffPixel )
+                if ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
+                  || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
+                  || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance)
+                   )
                 {
                     pixel_diff_count++;
                     changes = true;
@@ -217,11 +217,13 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                         int tx = int((r2.x + x/4.0) * thumbnail_scale);
                         int ty = int((r2.y + y) * thumbnail_scale);
 
-                        // Limit the coordinates to the thumbnail size.
+                        // Limit the coordinates to the thumbnail size (may be
+                        // off slightly due to rounding errors).
+                        // See https://github.com/vslavik/diff-pdf/pull/58
                         tx = std::min(tx, thumbnail_width - 1);
                         ty = std::min(ty, thumbnail_height - 1);
 
-                        // mark changes with red (for removed parts)
+                        // mark changes with red
                         thumbnail->SetRGB(tx, ty, 255, 0, 0);
                     }
                 }
@@ -237,16 +239,19 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 }
                 else
                 {
-                    if ( diffPixel )
+                    // For non-grayscale, if the pixel differs, force it to green.
+                    // Otherwise, do the original channel mixing.
+                    if ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
+                      || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
+                      || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance) )
                     {
-                        // Override diff pixel to green (RGB 0,200,0)
-                        *(out + x + 0) = 0;    // blue channel = 0
-                        *(out + x + 1) = 200;  // green channel = 200
-                        *(out + x + 2) = 0;    // red channel = 0
+                        // For added diff pixels, mask the pixel so that it becomes green.
+                        // For CAIRO_FORMAT_RGB24 (little-endian), 0x00FF00 is green.
+                        *((unsigned int*)(out + x)) = 0x00C800;
                     }
                     else
                     {
-                        // for pixels that are similar, continue with original mixing:
+                        // No significant difference; do the original mixing:
                         *(out + x + 2) = cb2;
                     }
                 }
