@@ -233,9 +233,9 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                     // convert both images to grayscale, use blue for s1, red for s2
                     unsigned char gray1 = to_grayscale(cr1, cg1, cb1);
                     unsigned char gray2 = to_grayscale(cr2, cg2, cb2);
-                    *(out + x + 0) = gray2;
-                    *(out + x + 1) = (gray1 + gray2) / 2;
-                    *(out + x + 2) = gray1;
+                    *(out + x + 0) = 0; //gray2;
+                    *(out + x + 1) = 255; //(gray1 + gray2) / 2;
+                    *(out + x + 2) = 0; //gray1;
                 }
                 else
                 {
