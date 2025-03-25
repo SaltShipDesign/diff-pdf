@@ -186,9 +186,12 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
     if ( s2 )
     {
         unsigned char *out = datadiff + r2.y * stridediff + r2.x * 4;
-        for ( int y = 0; y < r2.height; y++, data2 += stride2, out += stridediff )
+        for ( int y = 0;
+              y < r2.height;
+              y++, data2 += stride2, out += stridediff )
         {
             bool linediff = false;
+
             for ( int x = 0; x < r2.width * 4; x += 4 )
             {
                 unsigned char cr1 = *(out + x + 0);
@@ -202,57 +205,60 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 bool diffPixel = ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
                                  || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
                                  || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance) );
-                if(diffPixel)
+                if ( diffPixel )
                 {
                     pixel_diff_count++;
                     changes = true;
                     linediff = true;
 
-                    // Mark the thumbnail in green 200 instead of yellow
                     if ( thumbnail )
                     {
+                        // calculate the coordinates in the thumbnail
                         int tx = int((r2.x + x/4.0) * thumbnail_scale);
                         int ty = int((r2.y + y) * thumbnail_scale);
+
+                        // Limit the coordinates to the thumbnail size.
                         tx = std::min(tx, thumbnail_width - 1);
                         ty = std::min(ty, thumbnail_height - 1);
-                        thumbnail->SetRGB(tx, ty, 0, 200, 0);
-                    }
 
-                    // Set the diff image pixel explicitly to green 200.
-                    // In memory for CAIRO_FORMAT_RGB24 (little-endian):
-                    // Blue=0, Green=200, Red=0 produces RGB(0,200,0)
-                    *(out + x + 0) = 0;    // blue
-                    *(out + x + 1) = 200;  // green
-                    *(out + x + 2) = 0;    // red
+                        // mark changes with red (for removed parts)
+                        thumbnail->SetRGB(tx, ty, 255, 0, 0);
+                    }
+                }
+
+                if (g_grayscale)
+                {
+                    // convert both images to grayscale, use blue for s1, red for s2
+                    unsigned char gray1 = to_grayscale(cr1, cg1, cb1);
+                    unsigned char gray2 = to_grayscale(cr2, cg2, cb2);
+                    *(out + x + 0) = gray2;
+                    *(out + x + 1) = (gray1 + gray2) / 2;
+                    *(out + x + 2) = gray1;
                 }
                 else
                 {
-                    if (g_grayscale)
+                    if ( diffPixel )
                     {
-                        unsigned char gray1 = to_grayscale(cr1, cg1, cb1);
-                        unsigned char gray2 = to_grayscale(cr2, cg2, cb2);
-                        *(out + x + 0) = gray2;
-                        *(out + x + 1) = (gray1 + gray2) / 2;
-                        *(out + x + 2) = gray1;
+                        // Override diff pixel to green (RGB 0,200,0)
+                        *(out + x + 0) = 0;    // blue channel = 0
+                        *(out + x + 1) = 200;  // green channel = 200
+                        *(out + x + 2) = 0;    // red channel = 0
                     }
                     else
                     {
-                        // For pixels that are similar, continue with the original channel mixing.
+                        // for pixels that are similar, continue with original mixing:
                         *(out + x + 2) = cb2;
                     }
                 }
             }
 
-            // Optionally, mark the first few pixels of any row with differences with red 255.
             if (g_mark_differences && linediff)
             {
-                int marker_pixels = (10 < r2.width ? 10 : r2.width);
-                for (int x = 0; x < marker_pixels * 4; x += 4)
+                for (int x = 0; x < (10 < r2.width ? 10 : r2.width) * 4; x+=4)
                 {
-                    *(out + x + 0) = 147;    // blue channel = 147
-                    *(out + x + 1) = 20;  // green channel = 20
-                    *(out + x + 2) = 255;    // red channel = 255
-                    //pink color
+                   *(out + x + 0) = 0;
+                   *(out + x + 1) = 0;
+                   *(out + x + 2) = 255;
                 }
             }
         }
