@@ -186,11 +186,9 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
     if ( s2 )
     {
         unsigned char *out = datadiff + r2.y * stridediff + r2.x * 4;
-        // In diff_images, inside the loop comparing s2’s pixels:
         for ( int y = 0; y < r2.height; y++, data2 += stride2, out += stridediff )
         {
             bool linediff = false;
-
             for ( int x = 0; x < r2.width * 4; x += 4 )
             {
                 unsigned char cr1 = *(out + x + 0);
@@ -201,54 +199,59 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 unsigned char cg2 = *(data2 + x + 1);
                 unsigned char cb2 = *(data2 + x + 2);
 
-                if ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
-                  || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
-                  || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance)
-                   )
+                bool diffPixel = ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
+                                 || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
+                                 || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance) );
+                if(diffPixel)
                 {
                     pixel_diff_count++;
                     changes = true;
                     linediff = true;
 
+                    // Mark the thumbnail in yellow (standard RGB yellow is 255,255,0)
                     if ( thumbnail )
                     {
-                        // calculate the coordinates in the thumbnail
                         int tx = int((r2.x + x/4.0) * thumbnail_scale);
                         int ty = int((r2.y + y) * thumbnail_scale);
-
-                        // Limit the coordinates to the thumbnail size.
                         tx = std::min(tx, thumbnail_width - 1);
                         ty = std::min(ty, thumbnail_height - 1);
-
-                        // mark changes with yellow instead of red
                         thumbnail->SetRGB(tx, ty, 255, 255, 0);
                     }
-                }
 
-                if (g_grayscale)
-                {
-                    // convert both images to grayscale, use blue for s1, red for s2
-                    unsigned char gray1 = to_grayscale(cr1, cg1, cb1);
-                    unsigned char gray2 = to_grayscale(cr2, cg2, cb2);
-                    *(out + x + 0) = gray2;
-                    *(out + x + 1) = (gray1 + gray2) / 2;
-                    *(out + x + 2) = gray1;
+                    // Set the diff image pixel explicitly to yellow.
+                    // In memory, for CAIRO_FORMAT_RGB24 (little-endian), yellow (RGB 255,255,0)
+                    // must be stored as: Blue=0, Green=255, Red=255.
+                    *(out + x + 0) = 0;    // blue
+                    *(out + x + 1) = 255;  // green
+                    *(out + x + 2) = 255;  // red
                 }
                 else
                 {
-                    // change the B channel to be from s2; RG will be s1
-                    *(out + x + 2) = cb2;
+                    if (g_grayscale)
+                    {
+                        unsigned char gray1 = to_grayscale(cr1, cg1, cb1);
+                        unsigned char gray2 = to_grayscale(cr2, cg2, cb2);
+                        *(out + x + 0) = gray2;
+                        *(out + x + 1) = (gray1 + gray2) / 2;
+                        *(out + x + 2) = gray1;
+                    }
+                    else
+                    {
+                        // For pixels that are similar, continue with the original channel mixing.
+                        *(out + x + 2) = cb2;
+                    }
                 }
             }
 
-            // Change the marker from cyan to yellow.
+            // Optionally, mark the first few pixels of any row with differences with yellow.
             if (g_mark_differences && linediff)
             {
-                for (int x = 0; x < (10 < r2.width ? 10 : r2.width) * 4; x += 4)
+                int marker_pixels = (10 < r2.width ? 10 : r2.width);
+                for (int x = 0; x < marker_pixels * 4; x += 4)
                 {
-                   *(out + x + 0) = 0;    // Blue channel: 0
-                   *(out + x + 1) = 255;  // Green channel: 255
-                   *(out + x + 2) = 255;  // Red channel: 255   -> Results in yellow (RGB 255,255,0)
+                    *(out + x + 0) = 0;    // blue channel = 0
+                    *(out + x + 1) = 255;  // green channel = 255
+                    *(out + x + 2) = 255;  // red channel = 255
                 }
             }
         }
