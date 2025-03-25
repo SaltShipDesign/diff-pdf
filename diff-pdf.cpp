@@ -208,22 +208,22 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                     changes = true;
                     linediff = true;
 
-                    // Mark the thumbnail in yellow (standard RGB yellow is 255,255,0)
+                    // Mark the thumbnail in green 200 instead of yellow
                     if ( thumbnail )
                     {
                         int tx = int((r2.x + x/4.0) * thumbnail_scale);
                         int ty = int((r2.y + y) * thumbnail_scale);
                         tx = std::min(tx, thumbnail_width - 1);
                         ty = std::min(ty, thumbnail_height - 1);
-                        thumbnail->SetRGB(tx, ty, 255, 255, 0);
+                        thumbnail->SetRGB(tx, ty, 0, 200, 0);
                     }
 
-                    // Set the diff image pixel explicitly to yellow.
-                    // In memory, for CAIRO_FORMAT_RGB24 (little-endian), yellow (RGB 255,255,0)
-                    // must be stored as: Blue=0, Green=255, Red=255.
+                    // Set the diff image pixel explicitly to green 200.
+                    // In memory for CAIRO_FORMAT_RGB24 (little-endian):
+                    // Blue=0, Green=200, Red=0 produces RGB(0,200,0)
                     *(out + x + 0) = 0;    // blue
-                    *(out + x + 1) = 255;  // green
-                    *(out + x + 2) = 255;  // red
+                    *(out + x + 1) = 200;  // green
+                    *(out + x + 2) = 0;    // red
                 }
                 else
                 {
@@ -243,15 +243,15 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 }
             }
 
-            // Optionally, mark the first few pixels of any row with differences with yellow.
+            // Optionally, mark the first few pixels of any row with differences with green 200.
             if (g_mark_differences && linediff)
             {
                 int marker_pixels = (10 < r2.width ? 10 : r2.width);
                 for (int x = 0; x < marker_pixels * 4; x += 4)
                 {
                     *(out + x + 0) = 0;    // blue channel = 0
-                    *(out + x + 1) = 255;  // green channel = 255
-                    *(out + x + 2) = 255;  // red channel = 255
+                    *(out + x + 1) = 200;  // green channel = 200
+                    *(out + x + 2) = 0;    // red channel = 0
                 }
             }
         }
