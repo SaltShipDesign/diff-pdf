@@ -263,19 +263,9 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                     if (*(out + x + 0) == 255 && *(out + x + 1) == 255 && *(out + x + 2) < 255)
                     {
                         int r = *(out + x + 2);
-
-                        if (r > 200)
-                        {
-                            *(out + x + 0) = r;    // Blue
-                            *(out + x + 1) = r;  // Green
-                            *(out + x + 2) = r;    // Red
-                        }
-                        else
-                        {
-                            *(out + x + 0) = r;    // Blue
-                            *(out + x + 1) = 200;  // Green
-                            *(out + x + 2) = r;    // Red
-                        }
+                        *(out + x + 0) = r;    // Blue
+                        *(out + x + 1) = 255;  // Green
+                        *(out + x + 2) = r;    // Red                        
                     }
                 }
             }
