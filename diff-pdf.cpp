@@ -240,13 +240,13 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 else
                 {
                     // change the B channel to be from s2; RG will be s1
-                    //*(out + x + 2) = cb2;
-                    unsigned char color1 = (unsigned char)(0.2126 * cr1 + 0.7152 * cg1 + 0.0722 * cb1);
-                    //unsigned char color2 = (unsigned char)(0.2126 * cr2 + 0.7152 * cg2 + 0.0722 * cb2);
+                    *(out + x + 2) = cb2;
 
+                    //unsigned char color1 = (unsigned char)(0.2126 * cr1 + 0.7152 * cg1 + 0.0722 * cb1);
+                    //unsigned char color2 = (unsigned char)(0.2126 * cr2 + 0.7152 * cg2 + 0.0722 * cb2);
                     //*(out + x + 0) = gray2;
                     //*(out + x + 1) = (gray1 + gray2) / 2;
-                    *(out + x + 2) = color1;
+                    //*(out + x + 2) = color1;
                 }
             }
 
@@ -257,6 +257,18 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                    *(out + x + 0) = 0;
                    *(out + x + 1) = 0;
                    *(out + x + 2) = 255;
+                }
+            }
+
+            if (!g_grayscale)
+            {
+                for ( int x = 0; x < r2.width * 4; x += 4 )
+                {
+                    if (*(out + x + 1) == 255 && *(out + x + 2) == 255)
+                    {
+                        *(out + x + 1) = 200;
+                        *(out + x + 2) = 0;
+                    }
                 }
             }
         }
