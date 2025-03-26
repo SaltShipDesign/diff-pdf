@@ -264,7 +264,7 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
             {
                 for ( int x = 0; x < r2.width * 4; x += 4 )
                 {                    
-                    if (*(out + x + 0) == 255 && *(out + x + 1) == 255)
+                    if (*(out + x + 0) == 255 && *(out + x + 1) == 255 && *(out + x + 2) < 255)
                     {
                         *(out + x + 0) = 0;
                         *(out + x + 1) = 200;
