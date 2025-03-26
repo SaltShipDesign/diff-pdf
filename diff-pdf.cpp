@@ -254,23 +254,23 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
             {
                 for (int x = 0; x < (10 < r2.width ? 10 : r2.width) * 4; x+=4)
                 {
-                   *(out + x + 0) = 0;
-                   *(out + x + 1) = 0;
-                   *(out + x + 2) = 255;
+                   *(out + x + 0) = 0;    // B
+                   *(out + x + 1) = 0;    // G
+                   *(out + x + 2) = 255;  // R
                 }
             }
 
-            /*if (!g_grayscale)
+            if (!g_grayscale)
             {
                 for ( int x = 0; x < r2.width * 4; x += 4 )
-                {
-                    if (*(out + x + 1) == 255 && *(out + x + 2) == 255)
+                {                    
+                    if (*(out + x + 0) == 255 && *(out + x + 1) == 255)
                     {
+                        *(out + x + 0) = 0;
                         *(out + x + 1) = 200;
-                        *(out + x + 2) = 0;
                     }
                 }
-            }*/
+            }
         }
     }
 
@@ -348,7 +348,6 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
         return NULL;
     }
 }
-
 
 // Compares given two pages. If cr_out is not NULL, then the diff image (either
 // differences or unmodified page, if there are no diffs) is drawn to it.
