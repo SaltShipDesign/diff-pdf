@@ -260,7 +260,7 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 }
             }
 
-            if (!g_grayscale)
+            /*if (!g_grayscale)
             {
                 for ( int x = 0; x < r2.width * 4; x += 4 )
                 {
@@ -270,7 +270,7 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                         *(out + x + 2) = 0;
                     }
                 }
-            }
+            }*/
         }
     }
 
