@@ -240,7 +240,7 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 else
                 {
                     // change the B channel to be from s2; RG will be s1
-                    *(out + x + 2) = cg2; //cb2;
+                    *(out + x + 2) = cr2; //cg2; //cb2;
                 }
             }
 
