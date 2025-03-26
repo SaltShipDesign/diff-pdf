@@ -239,21 +239,8 @@ cairo_surface_t *diff_images(int page, cairo_surface_t *s1, cairo_surface_t *s2,
                 }
                 else
                 {
-                    // For non-grayscale, if the pixel differs, force it to green.
-                    // Otherwise, do the original channel mixing.
-                    if ( cr1 > (cr2+g_channel_tolerance) || cr1 < (cr2-g_channel_tolerance)
-                      || cg1 > (cg2+g_channel_tolerance) || cg1 < (cg2-g_channel_tolerance)
-                      || cb1 > (cb2+g_channel_tolerance) || cb1 < (cb2-g_channel_tolerance) )
-                    {
-                        // For added diff pixels, mask the pixel so that it becomes green.
-                        // For CAIRO_FORMAT_RGB24 (little-endian), 0x00FF00 is green.
-                        *((unsigned int*)(out + x)) = 0x00C800;
-                    }
-                    else
-                    {
-                        // No significant difference; do the original mixing:
-                        *(out + x + 2) = cb2;
-                    }
+                    // change the B channel to be from s2; RG will be s1
+                    *(out + x + 2) = cg2; //cb2;
                 }
             }
 
