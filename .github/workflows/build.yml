@@ -26,12 +26,24 @@ jobs:
     - name: Build source tarball
       run: make dist
 
+    - name: Package Linux binary
+      run: |
+        mkdir linux-dist
+        cp diff-pdf linux-dist/
+        cp README* LICENSE* linux-dist/ 2>/dev/null || true
+        tar -czvf diff-pdf-linux.tar.gz -C linux-dist .
+        
+    - name: Upload Linux binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-binaries
+        path: diff-pdf-linux.tar.gz
+          
     - name: Upload source tarball
       uses: actions/upload-artifact@v4
       with:
         name: source-tarball
         path: diff-pdf-*.tar.gz
-
 
   build-windows:
     name: Build on Windows
@@ -78,7 +90,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: source-tarball
-
+          
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-binaries
+            
       - uses: actions/download-artifact@v4
         with:
           name: win-binaries
