@@ -1,0 +1,1 @@
+$ ./diff-pdf --output-diff=diff.pdf 0217-101-001-C.pdf 0217-101-001-I.pdf
