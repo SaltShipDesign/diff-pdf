@@ -7,43 +7,43 @@ jobs:
     name: Build on Linux
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update && \
-        sudo apt-get install libpoppler-glib-dev poppler-utils libwxgtk3.2-dev
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install libpoppler-glib-dev poppler-utils libwxgtk3.2-dev
 
-    - name: Bootstrap
-      run: ./bootstrap
+      - name: Bootstrap
+        run: ./bootstrap
 
-    - name: Configure
-      run: ./configure
+      - name: Configure
+        run: ./configure
 
-    - name: Build
-      run: make
+      - name: Build
+        run: make
 
-    - name: Build source tarball
-      run: make dist
+      - name: Build source tarball
+        run: make dist
 
-    - name: Package Linux binary
-      run: |
-        mkdir linux-dist
-        cp diff-pdf linux-dist/
-        cp README* LICENSE* linux-dist/ 2>/dev/null || true
-        tar -czvf diff-pdf-linux.tar.gz -C linux-dist .
-        
-    - name: Upload Linux binary
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-binaries
-        path: diff-pdf-linux.tar.gz
-          
-    - name: Upload source tarball
-      uses: actions/upload-artifact@v4
-      with:
-        name: source-tarball
-        path: diff-pdf-*.tar.gz
+      - name: Package Linux binary
+        run: |
+          mkdir linux-dist
+          cp diff-pdf linux-dist/
+          cp README* LICENSE* linux-dist/ 2>/dev/null || true
+          tar -czvf diff-pdf-linux.tar.gz -C linux-dist .
+
+      - name: Upload Linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binaries
+          path: diff-pdf-linux.tar.gz
+
+      - name: Upload source tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-tarball
+          path: diff-pdf-*.tar.gz
 
   build-windows:
     name: Build on Windows
@@ -54,32 +54,36 @@ jobs:
         shell: msys2 {0}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Setup MSYS2 environment
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: UCRT64
-        update: true
-        install: mingw-w64-ucrt-x86_64-gcc automake autoconf pkg-config make zip mingw-w64-ucrt-x86_64-poppler mingw-w64-ucrt-x86_64-wxWidgets
+      - name: Setup MSYS2 environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc automake autoconf pkg-config make zip
+            mingw-w64-ucrt-x86_64-poppler
+            mingw-w64-ucrt-x86_64-wxwidgets3.2-common
+            mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
+            mingw-w64-ucrt-x86_64-wxwidgets3.2-msw-libs
 
-    - name: Bootstrap
-      run: ./bootstrap
+      - name: Bootstrap
+        run: ./bootstrap
 
-    - name: Configure
-      run: ./configure
+      - name: Configure
+        run: ./configure
 
-    - name: Build
-      run: make
+      - name: Build
+        run: make
 
-    - name: Build Windows archive
-      run: make windows-dist
+      - name: Build Windows archive
+        run: make windows-dist
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: win-binaries
-        path: diff-pdf*.zip
-
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-binaries
+          path: diff-pdf*.zip
 
   publish-release:
     name: Publish release
@@ -90,11 +94,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: source-tarball
-          
+
       - uses: actions/download-artifact@v4
         with:
           name: linux-binaries
-            
+
       - uses: actions/download-artifact@v4
         with:
           name: win-binaries
