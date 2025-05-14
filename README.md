@@ -7,6 +7,15 @@ willing to get your hands dirty, this tool is probably not for you.*
 
 [![Build](https://github.com/vslavik/diff-pdf/actions/workflows/build.yml/badge.svg)](https://github.com/vslavik/diff-pdf/actions/workflows/build.yml)
 
+## Trigger Github build actions and make a new release
+Create a tag:
+```
+# Replace v1.2.3 with your version
+git tag -a v1.2.3 -m "Release version 1.2.3"
+
+# Push the tag to trigger the build
+git push origin v1.2.3
+```
 ## Usage
 
 diff-pdf is a tool for visually comparing two PDFs.
