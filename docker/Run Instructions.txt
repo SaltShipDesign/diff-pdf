@@ -1,3 +1,7 @@
+- Put the latest diff-pdf binary in a folder you want to mount from the docker host.
+- Put the "source" pdf files in the same folder
+- mount this folder to the docker image
+
 docker pull ubuntu
 docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf>
 
