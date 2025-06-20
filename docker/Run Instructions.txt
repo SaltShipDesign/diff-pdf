@@ -2,8 +2,11 @@
 - Put the "source" pdf files in the same folder
 - mount this folder to the docker image
 
+Navigate to the mount folder on the docker host and then:
 >> docker pull ubuntu
 >> docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf>
 
 Example:
 >> docker run --rm -v D:\Temp\_diff-pdf\pdfs:/data diff-pdf-image pdf_A.pdf pdf_B.pdf custom-diff.pdf
+
+After completion, the <output-pdf> will be available in the mount folder
