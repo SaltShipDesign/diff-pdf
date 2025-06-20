@@ -1,0 +1,5 @@
+docker pull ubuntu
+docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf>
+
+Example:
+docker run --rm -v D:\Temp\_diff-pdf\pdfs:/data diff-pdf-image pdf_A.pdf pdf_B.pdf custom-diff.pdf
