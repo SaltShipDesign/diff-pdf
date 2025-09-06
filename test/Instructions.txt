@@ -1,1 +1,18 @@
+On an Ubuntu VM, it may be neccessary to do the following first:
+
+$ sudo apt-get update
+$ sudo apt-get install -y libpoppler-glib-dev poppler-utils libwxgtk3.2-dev
+$ sudo apt-get install -y xvfb xauth x11-apps libgtk-3-0 libx11-6 libxkbcommon0 libxkbcommon-x11-0
+
+Copy the libs in \poppler-libs to the target device
+
+run
+$ sudo apt install ./libpoppler118_22.02.0-2ubuntu0.6_amd64.deb \
+                   ./libpoppler-glib8_22.02.0-2ubuntu0.6_amd64.deb \
+                   ./gir1.2-poppler-0.18_22.02.0-2ubuntu0.6_amd64.deb \
+                   ./poppler-utils_22.02.0-2ubuntu0.6_amd64.deb
+$ sudo apt-mark hold poppler-utils libpoppler118 libpoppler-glib8 gir1.2-poppler-0.18
+
+$ Xvfb :99 -screen 0 1280x800x24 &
+$ export DISPLAY=:99
 $ ./diff-pdf --output-diff=diff.pdf 0217-101-001-C.pdf 0217-101-001-I.pdf

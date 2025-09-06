@@ -3,7 +3,11 @@
 - mount this folder to the docker image
 
 Navigate to the mount folder on the docker host and then:
+>> snap install docker
 >> docker pull ubuntu
+>> Copy the Dockerfile from this repo to the root of the diff-pdf binary folder
+>> Copy the folder docker and poppler-libs from this repo to the root of the diff-pdf binary folder
+>> docker build -t diff-pdf-image .
 >> docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf>
 
 Example:
