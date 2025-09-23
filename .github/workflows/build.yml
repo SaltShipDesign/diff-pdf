@@ -3,11 +3,11 @@ name: Build
 on:
   push:
     # run on branch pushes...
-    branches: [ main ]
+    branches: [ master ]
     # ...and on tag pushes matching v*
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build-linux:
