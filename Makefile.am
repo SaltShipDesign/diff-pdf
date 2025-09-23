@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = diff-pdf
+bin_PROGRAMS = diff-pdf-b
 
 diff_pdf_SOURCES = \
 			diff-pdf.cpp \
