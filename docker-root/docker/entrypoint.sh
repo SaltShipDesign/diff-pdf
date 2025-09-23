@@ -8,7 +8,7 @@ chmod 700 "$XDG_RUNTIME_DIR"
 
 # Validate PDF arguments: two inputs and an optional output filename
 if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-  echo "Usage: diff-pdf <source1>.pdf <source2>.pdf [output.pdf]"
+  echo "Usage: diff-pdf-b <source1>.pdf <source2>.pdf [output.pdf]"
   exit 1
 fi
 
@@ -23,5 +23,5 @@ export DISPLAY=:99
 # Allow Xvfb to start
 sleep 1
 
-# Run diff-pdf with output flag, creating the specified diff file in /data
-exec /usr/local/bin/diff-pdf "$SOURCE1" "$SOURCE2" --output-diff="$OUTPUT"
+# Run diff-pdf-b with output flag, creating the specified diff file in /data
+exec /usr/local/bin/diff-pdf-b "$SOURCE1" "$SOURCE2" --output-diff="$OUTPUT"

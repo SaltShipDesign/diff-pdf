@@ -36,7 +36,7 @@ jobs:
       - name: Package Linux binary
         run: |
           mkdir linux-dist
-          cp diff-pdf linux-dist/
+          cp diff-pdf-b linux-dist/
           cp README* LICENSE* linux-dist/ 2>/dev/null || true
           tar -czvf diff-pdf-linux.tar.gz -C linux-dist .
 

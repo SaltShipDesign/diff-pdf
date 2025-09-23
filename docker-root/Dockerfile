@@ -28,8 +28,8 @@ RUN apt-get update && apt-get install -y \
     apt-mark hold poppler-utils libpoppler118 libpoppler-glib8 gir1.2-poppler-0.18 && \
     rm -rf /var/lib/apt/lists/* /tmp/poppler
 
-COPY docker/bin/diff-pdf /usr/local/bin/diff-pdf
-RUN chmod +x /usr/local/bin/diff-pdf
+COPY docker/bin/diff-pdf /usr/local/bin/diff-pdf-b
+RUN chmod +x /usr/local/bin/diff-pdf-b
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
