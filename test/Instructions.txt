@@ -13,6 +13,4 @@ $ sudo apt install ./libpoppler118_22.02.0-2ubuntu0.6_amd64.deb \
                    ./poppler-utils_22.02.0-2ubuntu0.6_amd64.deb
 $ sudo apt-mark hold poppler-utils libpoppler118 libpoppler-glib8 gir1.2-poppler-0.18
 
-$ Xvfb :99 -screen 0 1280x800x24 &
-$ export DISPLAY=:99
-$ ./diff-pdf --output-diff=diff.pdf 0217-101-001-C.pdf 0217-101-001-I.pdf
+$ ./diff-pdf --output-diff=diff.pdf 0217-101-001-C.pdf 0217-101-001-I.pdf 99
