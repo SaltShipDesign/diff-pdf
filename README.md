@@ -114,17 +114,10 @@ Dispatcher environment variables:
 Use this image when you have two local PDF files and want a generated visual
 diff PDF.
 
-Before building, make sure the Docker build context contains:
-
-- `docker-root/docker/bin/diff-pdf`, a Linux `diff-pdf-b` binary copied or
-  renamed to `diff-pdf`
-- the pinned Poppler `.deb` files in `docker-root/poppler-libs/`
-
 Build the image:
 
 ```sh
-cd docker-root
-docker build -t diff-pdf-image .
+docker build -f docker-root/Dockerfile -t diff-pdf-image .
 ```
 
 Run it by mounting a host directory containing the input PDFs to `/data`.
@@ -140,9 +133,7 @@ docker run --rm \
 Example using the repository test PDFs:
 
 ```sh
-cd docker-root
-docker build -t diff-pdf-image .
-cd ..
+docker build -f docker-root/Dockerfile -t diff-pdf-image .
 docker run --rm \
   -v "$PWD/test:/data" \
   diff-pdf-image 0217-101-001-C.pdf 0217-101-001-I.pdf output-diff.pdf

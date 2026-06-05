@@ -70,6 +70,7 @@ jobs:
           fi
 
           test -s test/output-diff.pdf
+          bash test/assert-output-pdf-matches-expected.sh test/output-diff.pdf
 
       - name: Build source archive
         run: make dist
@@ -101,6 +102,54 @@ jobs:
           name: diff-pdf-smoke-test-output
           path: test/output-diff.pdf
           if-no-files-found: error
+
+  manual-docker-image:
+    name: Manual Docker image
+    runs-on: ubuntu-24.04
+    needs:
+      - linux
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Download Linux binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: diff-pdf-linux-x86_64
+          path: artifacts/linux
+
+      - name: Use built diff-pdf binary
+        run: |
+          mkdir -p artifacts/linux/extracted
+          tar -xzf artifacts/linux/diff-pdf-linux-x86_64.tar.gz -C artifacts/linux/extracted
+          install -m 755 \
+            artifacts/linux/extracted/diff-pdf-linux-x86_64/diff-pdf \
+            job-dispatcher/docker/bin/diff-pdf-b
+
+      - name: Build manual Docker image
+        run: docker build -f docker-root/Dockerfile -t diff-pdf-image:smoke-test .
+
+      - name: Smoke test manual Docker image
+        run: |
+          mkdir -p artifacts/manual-docker-image
+          set +e
+          docker run --rm \
+            -v "$PWD/test:/input:ro" \
+            -v "$PWD/artifacts/manual-docker-image:/data" \
+            diff-pdf-image:smoke-test \
+            /input/0217-101-001-C.pdf \
+            /input/0217-101-001-I.pdf \
+            output-diff.pdf
+          exit_code=$?
+          set -e
+
+          if [ "$exit_code" -ne 1 ]; then
+            echo "Expected manual Docker image to return 1 for different PDFs, got $exit_code" >&2
+            exit 1
+          fi
+
+          bash test/assert-output-pdf-matches-expected.sh artifacts/manual-docker-image/output-diff.pdf
 
   job-dispatcher:
     name: Job dispatcher image
@@ -153,12 +202,14 @@ jobs:
 
       - name: Smoke test job dispatcher image
         run: |
+          mkdir -p artifacts/job-dispatcher-smoke
           set +e
           docker run --rm \
             -v "$PWD/test:/test:ro" \
+            -v "$PWD/artifacts/job-dispatcher-smoke:/out" \
             --entrypoint /bin/sh \
             "$DISPATCHER_IMAGE" \
-            -c '/usr/local/bin/diff-pdf /test/0217-101-001-C.pdf /test/0217-101-001-I.pdf --output-diff=/tmp/output-diff.pdf "$DIFF_PDF_DISPLAY"; exit_code=$?; test -s /tmp/output-diff.pdf || exit 10; exit "$exit_code"'
+            -c '/usr/local/bin/diff-pdf /test/0217-101-001-C.pdf /test/0217-101-001-I.pdf --output-diff=/out/output-diff.pdf "$DIFF_PDF_DISPLAY"; exit_code=$?; test -s /out/output-diff.pdf || exit 10; exit "$exit_code"'
           exit_code=$?
           set -e
 
@@ -166,6 +217,8 @@ jobs:
             echo "Expected dispatcher diff-pdf wrapper to return 1 for different PDFs, got $exit_code" >&2
             exit 1
           fi
+
+          bash test/assert-output-pdf-matches-expected.sh artifacts/job-dispatcher-smoke/output-diff.pdf
 
       - name: Package job dispatcher image
         run: |
@@ -184,6 +237,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - linux
+      - manual-docker-image
       - job-dispatcher
     if: startsWith(github.ref, 'refs/tags/v')
 

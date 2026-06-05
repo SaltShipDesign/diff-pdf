@@ -2,9 +2,8 @@
 # Go into the home directory (/home/<user>)
 >> snap install docker
 >> docker pull ubuntu
-# Copy the docker-root folder from the repo to the user home folder.
-# Go into the destination folder, e.g. /home/<user>/docker-root
->> docker build -t diff-pdf-image .
+# Go into the repository root.
+>> docker build -f docker-root/Dockerfile -t diff-pdf-image .
 # Copy test pdf files into /home/<user>/testpdfs
 # Go into the folder /home/<user>/testpdfs
 >> docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf>

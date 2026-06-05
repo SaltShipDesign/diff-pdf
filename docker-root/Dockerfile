@@ -1,4 +1,6 @@
-FROM ubuntu:22.04
+ARG DIFF_PDF_PLATFORM=linux/amd64
+
+FROM --platform=${DIFF_PDF_PLATFORM} ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -14,11 +16,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && apt-get install -y --no-install-recommends \
       libwxgtk3.2-1 \
       libwxbase3.2-1 \
-      xvfb xauth x11-apps libgtk-3-0 libx11-6 libxkbcommon0 libxkbcommon-x11-0 \
+      xvfb \
+      xauth \
+      libgtk-3-0 \
+      libx11-6 \
+      libxkbcommon0 \
+      libxkbcommon-x11-0 \
   && rm -rf /var/lib/apt/lists/*
 
-# --- your existing poppler pinning and binaries follow ---
-COPY poppler-libs/*.deb /tmp/poppler/
+COPY docker-root/poppler-libs/*.deb /tmp/poppler/
 
 RUN apt-get update && apt-get install -y \
       /tmp/poppler/libpoppler118_22.02.0-2ubuntu0.6_amd64.deb \
@@ -28,10 +34,10 @@ RUN apt-get update && apt-get install -y \
     apt-mark hold poppler-utils libpoppler118 libpoppler-glib8 gir1.2-poppler-0.18 && \
     rm -rf /var/lib/apt/lists/* /tmp/poppler
 
-COPY docker/bin/diff-pdf /usr/local/bin/diff-pdf-b
+COPY job-dispatcher/docker/bin/diff-pdf-b /usr/local/bin/diff-pdf-b
 RUN chmod +x /usr/local/bin/diff-pdf-b
 
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker-root/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
 
 WORKDIR /data

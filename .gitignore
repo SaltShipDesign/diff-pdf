@@ -27,5 +27,9 @@ obj/
 # the final binary
 /docker-root/docker/bin/diff-pdf
 
+# generated smoke-test outputs
+/artifacts/
+/test/output-diff.pdf
+
 # Custom
 .idea

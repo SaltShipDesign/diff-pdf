@@ -1,5 +1,7 @@
 .git
 .idea
+artifacts
+test/output-diff.pdf
 **/bin
 **/obj
 !job-dispatcher/docker/bin/
