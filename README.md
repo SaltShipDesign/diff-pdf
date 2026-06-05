@@ -13,10 +13,10 @@ git tag -a v1.2.3 -m "Release version 1.2.3"
 git push origin v1.2.3
 ```
 
-The tag workflow builds Linux and Windows binaries, builds the job-dispatcher
-Docker image, verifies that the dispatcher image contains the Linux `diff-pdf`
-binary built by the same workflow run, and publishes the artifacts to the
-GitHub release.
+The tag workflow builds the Linux binary, builds the job-dispatcher Docker
+image, verifies that the dispatcher image contains the Linux `diff-pdf` binary
+built by the same workflow run, and publishes the artifacts to the GitHub
+release.
 
 ## Job dispatcher image
 

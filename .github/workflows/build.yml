@@ -102,58 +102,6 @@ jobs:
           path: test/output-diff.pdf
           if-no-files-found: error
 
-  windows:
-    name: Windows
-    runs-on: windows-latest
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - name: Check out sources
-        uses: actions/checkout@v4
-
-      - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          install: >-
-            autoconf
-            automake
-            make
-            pkgconf
-            zip
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-pkgconf
-            mingw-w64-ucrt-x86_64-poppler
-            mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
-
-      - name: Bootstrap
-        env:
-          wx: /ucrt64/share/aclocal
-        run: ./bootstrap
-
-      - name: Configure
-        run: ./configure --with-wx-config=/ucrt64/bin/wx-config
-
-      - name: Build
-        run: make -j"$(nproc)"
-
-      - name: Smoke test
-        run: ./diff-pdf-b.exe --help > /dev/null
-
-      - name: Build Windows archive
-        run: make windows-dist
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: diff-pdf-windows-x86_64
-          path: diff-pdf-win-*.zip
-          if-no-files-found: error
-
   job-dispatcher:
     name: Job dispatcher image
     runs-on: ubuntu-24.04
@@ -223,7 +171,6 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - linux
-      - windows
       - job-dispatcher
     if: startsWith(github.ref, 'refs/tags/v')
 
