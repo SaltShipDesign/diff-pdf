@@ -18,6 +18,12 @@ mingw
 
 # compiled (and unlinked) objects
 *.o
+bin/
+obj/
+**/bin/
+**/obj/
+!job-dispatcher/docker/bin/
+!job-dispatcher/docker/bin/diff-pdf-b
 # the final binary
 /docker-root/docker/bin/diff-pdf
 

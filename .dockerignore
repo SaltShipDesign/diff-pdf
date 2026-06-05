@@ -1,0 +1,11 @@
+.git
+.idea
+**/bin
+**/obj
+!job-dispatcher/docker/bin/
+!job-dispatcher/docker/bin/diff-pdf-b
+autom4te.cache
+config.log
+config.status
+Makefile
+Makefile.in

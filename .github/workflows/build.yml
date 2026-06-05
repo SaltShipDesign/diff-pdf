@@ -2,24 +2,47 @@ name: Build
 
 on:
   push:
-    # run on branch pushes...
-    branches: [ master ]
-    # ...and on tag pushes matching v*
-    tags: [ 'v*' ]
+    branches:
+      - master
+      - main
+    tags:
+      - "v*"
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-linux:
-    name: Build on Linux
-    runs-on: ubuntu-latest
+  linux:
+    name: Linux
+    runs-on: ubuntu-24.04
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out sources
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && \
-          sudo apt-get install -y libpoppler-glib-dev poppler-utils libwxgtk3.2-dev
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            autoconf \
+            automake \
+            g++ \
+            make \
+            pkg-config \
+            xvfb \
+            xauth \
+            libpoppler-glib-dev \
+            poppler-utils \
+            libwxgtk3.2-dev
 
       - name: Bootstrap
         run: ./bootstrap
@@ -28,113 +51,201 @@ jobs:
         run: ./configure
 
       - name: Build
-        run: make
+        run: make -j"$(nproc)"
 
-      - name: Build source tarball
+      - name: Smoke test
+        run: |
+          set +e
+          xvfb-run --auto-servernum ./diff-pdf-b \
+            --dpi=72 \
+            --output-diff=test/output-diff.pdf \
+            test/0217-101-001-C.pdf \
+            test/0217-101-001-I.pdf
+          status=$?
+          set -e
+
+          if [ "$status" -ne 1 ]; then
+            echo "Expected diff-pdf-b to return 1 for different PDFs, got $status" >&2
+            exit 1
+          fi
+
+          test -s test/output-diff.pdf
+
+      - name: Build source archive
         run: make dist
 
       - name: Package Linux binary
         run: |
-          mkdir linux-dist
-          cp diff-pdf-b linux-dist/
-          cp README* LICENSE* linux-dist/ 2>/dev/null || true
-          tar -czvf diff-pdf-linux.tar.gz -C linux-dist .
+          mkdir -p dist/diff-pdf-linux-x86_64
+          cp diff-pdf-b dist/diff-pdf-linux-x86_64/diff-pdf
+          cp README.md COPYING COPYING.icons AUTHORS dist/diff-pdf-linux-x86_64/
+          tar -C dist -czf dist/diff-pdf-linux-x86_64.tar.gz diff-pdf-linux-x86_64
 
-      - name: Upload Linux binary
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-binaries
-          path: diff-pdf-linux.tar.gz
+          name: diff-pdf-linux-x86_64
+          path: dist/diff-pdf-linux-x86_64.tar.gz
+          if-no-files-found: error
 
-      - name: Upload source tarball
+      - name: Upload source artifact
         uses: actions/upload-artifact@v4
         with:
-          name: source-tarball
+          name: diff-pdf-source
           path: diff-pdf-*.tar.gz
+          if-no-files-found: error
 
-  build-windows:
-    name: Build on Windows
+      - name: Upload smoke test diff PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff-pdf-smoke-test-output
+          path: test/output-diff.pdf
+          if-no-files-found: error
+
+  windows:
+    name: Windows
     runs-on: windows-latest
+
     defaults:
       run:
         shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Setup MSYS2 environment
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
           install: >-
-            mingw-w64-ucrt-x86_64-gcc automake autoconf pkg-config make zip
+            autoconf
+            automake
+            make
+            pkgconf
+            zip
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-poppler
-            mingw-w64-ucrt-x86_64-wxwidgets3.2-common
             mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
-            mingw-w64-ucrt-x86_64-wxwidgets3.2-msw-libs
 
       - name: Bootstrap
+        env:
+          wx: /ucrt64/share/aclocal
         run: ./bootstrap
 
       - name: Configure
-        run: ./configure
+        run: ./configure --with-wx-config=/ucrt64/bin/wx-config
 
       - name: Build
-        run: make
+        run: make -j"$(nproc)"
+
+      - name: Smoke test
+        run: ./diff-pdf-b.exe --help > /dev/null
 
       - name: Build Windows archive
         run: make windows-dist
 
-      - name: Upload Windows binary
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: win-binaries
-          path: diff-pdf*.zip
+          name: diff-pdf-windows-x86_64
+          path: diff-pdf-win-*.zip
+          if-no-files-found: error
 
-  publish-release:
-    name: Publish release
-    needs: [ build-linux, build-windows ]
-    runs-on: ubuntu-latest
+  job-dispatcher:
+    name: Job dispatcher image
+    runs-on: ubuntu-24.04
+    needs:
+      - linux
     if: startsWith(github.ref, 'refs/tags/v')
+
     steps:
-      - name: Checkout code
+      - name: Check out sources
         uses: actions/checkout@v4
 
-      - name: Download Linux binary
+      - name: Prepare image metadata
+        run: |
+          image_tag="${GITHUB_REF_NAME//\//-}"
+          image_tag="${image_tag//[^A-Za-z0-9_.-]/-}"
+          echo "DISPATCHER_IMAGE=diff-pdf-job-dispatcher:$image_tag" >> "$GITHUB_ENV"
+          echo "DISPATCHER_ARTIFACT_TAG=$image_tag" >> "$GITHUB_ENV"
+
+      - name: Download Linux binary artifact
         uses: actions/download-artifact@v4
         with:
-          name: linux-binaries
+          name: diff-pdf-linux-x86_64
           path: artifacts/linux
 
-      - name: Download Windows binary
-        uses: actions/download-artifact@v4
-        with:
-          name: win-binaries
-          path: artifacts/windows
-
-      - name: Download source tarball
-        uses: actions/download-artifact@v4
-        with:
-          name: source-tarball
-          path: artifacts/source
-
-      - name: Flatten artifacts to workspace root
+      - name: Use built diff-pdf binary
         run: |
-          cp artifacts/linux/* .
-          cp artifacts/windows/* .
-          cp artifacts/source/* .
+          mkdir -p artifacts/linux/extracted
+          tar -xzf artifacts/linux/diff-pdf-linux-x86_64.tar.gz -C artifacts/linux/extracted
+          install -m 755 \
+            artifacts/linux/extracted/diff-pdf-linux-x86_64/diff-pdf \
+            job-dispatcher/docker/bin/diff-pdf-b
+          sha256sum job-dispatcher/docker/bin/diff-pdf-b > artifacts/linux/diff-pdf-b.sha256
 
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+      - name: Build job dispatcher image
+        run: docker build -f job-dispatcher/Dockerfile -t "$DISPATCHER_IMAGE" .
+
+      - name: Verify image uses built diff-pdf binary
+        run: |
+          container_id="$(docker create "$DISPATCHER_IMAGE")"
+          docker cp "$container_id:/usr/local/bin/diff-pdf-b" artifacts/linux/diff-pdf-b-from-image
+          docker rm "$container_id"
+
+          expected="$(cut -d' ' -f1 artifacts/linux/diff-pdf-b.sha256)"
+          actual="$(sha256sum artifacts/linux/diff-pdf-b-from-image | cut -d' ' -f1)"
+          if [ "$expected" != "$actual" ]; then
+            echo "The job dispatcher image does not contain the diff-pdf binary built by this workflow." >&2
+            exit 1
+          fi
+
+      - name: Smoke test job dispatcher image
+        run: docker run --rm --entrypoint /usr/local/bin/diff-pdf-b "$DISPATCHER_IMAGE" --help > /dev/null
+
+      - name: Package job dispatcher image
+        run: |
+          mkdir -p dist
+          docker save "$DISPATCHER_IMAGE" | gzip > "dist/diff-pdf-job-dispatcher-$DISPATCHER_ARTIFACT_TAG.tar.gz"
+
+      - name: Upload job dispatcher image artifact
+        uses: actions/upload-artifact@v4
         with:
-          # explicit tag to use
-          tag: ${{ github.ref_name }}
-          # human-friendly release name
-          name: Release ${{ github.ref_name }}
-          # combine both tars and zips
-          artifacts: "*.tar.gz,*.zip"
-          # allow updating an existing prerelease if re-run
-          allowUpdates: true
-          # change to `false` if you want a full, non-prerelease release
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: diff-pdf-job-dispatcher-image
+          path: dist/diff-pdf-job-dispatcher-*.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: Release
+    runs-on: ubuntu-24.04
+    needs:
+      - linux
+      - windows
+      - job-dispatcher
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            gh release upload "$TAG_NAME" release-artifacts/* --clobber
+          else
+            gh release create "$TAG_NAME" release-artifacts/* \
+              --title "Release $TAG_NAME" \
+              --notes "Automated release for $TAG_NAME"
+          fi

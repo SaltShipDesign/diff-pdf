@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -u -o pipefail
+
+if [[ $# -lt 3 ]]; then
+  echo "Usage: $(basename "$0") [OPTIONS] file1.pdf file2.pdf <display-number>" >&2
+  exit 1
+fi
+
+DISPLAY_NO="${!#}"
+ARGS=("${@:1:$(($#-1))}")
+
+command -v diff-pdf-b >/dev/null 2>&1 || {
+  echo "ERROR: diff-pdf-b not found in PATH." >&2
+  exit 4
+}
+
+command -v Xvfb >/dev/null 2>&1 || {
+  echo "ERROR: Xvfb not found in PATH." >&2
+  exit 3
+}
+
+normalize_display() {
+  local n="$1"
+  if [[ "$n" =~ ^[0-9]+$ ]]; then
+    echo ":$n"
+  elif [[ "$n" == :* ]]; then
+    echo "$n"
+  else
+    echo ":$n"
+  fi
+}
+
+display_ready() {
+  local disp="$1"
+  if command -v xdpyinfo >/dev/null 2>&1; then
+    DISPLAY="$disp" xdpyinfo >/dev/null 2>&1 && return 0
+  fi
+  if [[ "$disp" == :* ]]; then
+    local n="${disp#:}"
+    [[ -S "/tmp/.X11-unix/X${n}" ]] && return 0
+  fi
+  return 1
+}
+
+start_xvfb() {
+  local disp="$1"
+  Xvfb "$disp" -screen 0 1280x800x24 >/dev/null 2>&1 &
+  echo $!
+}
+
+cleanup_xvfb() {
+  local pid="$1"
+  [[ -n "$pid" ]] || return
+  kill "$pid" >/dev/null 2>&1 || true
+  wait "$pid" 2>/dev/null || true
+}
+
+TARGET_DISPLAY="$(normalize_display "$DISPLAY_NO")"
+XVFB_PID=""
+
+if ! display_ready "$TARGET_DISPLAY"; then
+  XVFB_PID="$(start_xvfb "$TARGET_DISPLAY")"
+  for _ in {1..100}; do
+    display_ready "$TARGET_DISPLAY" && break
+    sleep 0.1
+  done
+  if ! display_ready "$TARGET_DISPLAY"; then
+    cleanup_xvfb "$XVFB_PID"
+    echo "ERROR: Timed out waiting for Xvfb on $TARGET_DISPLAY." >&2
+    exit 5
+  fi
+fi
+
+export DISPLAY="$TARGET_DISPLAY"
+
+diff-pdf-b "${ARGS[@]}"
+EXIT_CODE=$?
+
+cleanup_xvfb "$XVFB_PID"
+exit $EXIT_CODE
