@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libwxbase3.2-1 \
       xvfb \
       xauth \
-      x11-apps \
+      x11-utils \
       libgtk-3-0 \
       libx11-6 \
       libxkbcommon0 \
@@ -60,6 +60,9 @@ COPY --from=build /out/job-dispatcher /usr/local/bin/job-dispatcher
 
 RUN chmod +x /usr/local/bin/diff-pdf /usr/local/bin/diff-pdf-b /usr/local/bin/job-dispatcher \
   && mkdir -p /work
+
+ENV DIFF_PDF_PATH=/usr/local/bin/diff-pdf \
+    DIFF_PDF_DISPLAY=99
 
 WORKDIR /work
 ENTRYPOINT ["/usr/local/bin/job-dispatcher"]

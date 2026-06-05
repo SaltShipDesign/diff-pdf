@@ -152,7 +152,20 @@ jobs:
           fi
 
       - name: Smoke test job dispatcher image
-        run: docker run --rm --entrypoint /usr/local/bin/diff-pdf-b "$DISPATCHER_IMAGE" --help > /dev/null
+        run: |
+          set +e
+          docker run --rm \
+            -v "$PWD/test:/test:ro" \
+            --entrypoint /bin/sh \
+            "$DISPATCHER_IMAGE" \
+            -c '/usr/local/bin/diff-pdf /test/0217-101-001-C.pdf /test/0217-101-001-I.pdf --output-diff=/tmp/output-diff.pdf "$DIFF_PDF_DISPLAY"; exit_code=$?; test -s /tmp/output-diff.pdf || exit 10; exit "$exit_code"'
+          exit_code=$?
+          set -e
+
+          if [ "$exit_code" -ne 1 ]; then
+            echo "Expected dispatcher diff-pdf wrapper to return 1 for different PDFs, got $exit_code" >&2
+            exit 1
+          fi
 
       - name: Package job dispatcher image
         run: |
