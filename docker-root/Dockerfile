@@ -1,6 +1,7 @@
 ARG DIFF_PDF_PLATFORM=linux/amd64
 
-FROM --platform=${DIFF_PDF_PLATFORM} ubuntu:22.04
+# ubuntu:jammy-20240911.1 reports Ubuntu 22.04.5 LTS.
+FROM --platform=${DIFF_PDF_PLATFORM} ubuntu:jammy-20240911.1
 
 ENV DEBIAN_FRONTEND=noninteractive
 

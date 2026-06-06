@@ -1,7 +1,7 @@
 # Go into the host using terminal / ssh
 # Go into the home directory (/home/<user>)
 >> snap install docker
->> docker pull ubuntu
+>> docker pull ubuntu:jammy-20240911.1
 # Go into the repository root.
 >> docker build -f docker-root/Dockerfile -t diff-pdf-image .
 # Copy test pdf files into /home/<user>/testpdfs
