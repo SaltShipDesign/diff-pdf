@@ -139,13 +139,5 @@ docker run --rm \
   diff-pdf-image 0217-101-001-C.pdf 0217-101-001-I.pdf output-diff.pdf
 ```
 
-Example on Windows PowerShell:
-
-```powershell
-docker run --rm `
-  -v "D:\Temp\pdfs:/data" `
-  diff-pdf-image pdf_A.pdf pdf_B.pdf custom-diff.pdf
-```
-
 After the container exits, the output PDF is available in the mounted host
 directory.
