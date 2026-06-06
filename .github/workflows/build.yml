@@ -106,15 +106,17 @@ jobs:
             -verify
 
           test -s test/output-diff.pdf
-          mkdir -p artifacts/manual-docker-image
-          cp test/output-diff.pdf artifacts/manual-docker-image/output-diff.pdf
 
-  job-dispatcher:
-    name: Job dispatcher image
+  release:
+    name: Release
     runs-on: ubuntu-24.04
     needs:
       - linux
+      - manual-docker-image
     if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
 
     steps:
       - name: Check out sources
@@ -183,41 +185,18 @@ jobs:
           mkdir -p dist
           docker save "$DISPATCHER_IMAGE" | gzip > "dist/diff-pdf-job-dispatcher-$DISPATCHER_ARTIFACT_TAG.tar.gz"
 
-      - name: Upload job dispatcher image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: diff-pdf-job-dispatcher-image
-          path: dist/diff-pdf-job-dispatcher-*.tar.gz
-          if-no-files-found: error
-
-  release:
-    name: Release
-    runs-on: ubuntu-24.04
-    needs:
-      - linux
-      - manual-docker-image
-      - job-dispatcher
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-          merge-multiple: true
-
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
+          release_file="dist/diff-pdf-job-dispatcher-$DISPATCHER_ARTIFACT_TAG.tar.gz"
+          test -s "$release_file"
+
           if gh release view "$TAG_NAME" > /dev/null 2>&1; then
-            gh release upload "$TAG_NAME" release-artifacts/* --clobber
+            gh release upload "$TAG_NAME" "$release_file" --clobber
           else
-            gh release create "$TAG_NAME" release-artifacts/* \
+            gh release create "$TAG_NAME" "$release_file" \
               --title "Release $TAG_NAME" \
               --notes "Automated release for $TAG_NAME"
           fi

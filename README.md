@@ -6,17 +6,17 @@ Running diff-pdf through Docker is the only supported way to use this tool.
 
 ## Creating a release
 
-Create and push a `v*` tag to build the release artifacts:
+Create and push a `v*` tag to build the release:
 
 ```sh
 git tag -a v1.2.3 -m "Release version 1.2.3"
 git push origin v1.2.3
 ```
 
-The tag workflow builds the Linux binary, builds the job-dispatcher Docker
-image, verifies that the dispatcher image contains the Linux `diff-pdf` binary
-built by the same workflow run, and publishes the artifacts to the GitHub
-release.
+The tag workflow builds the Linux binary, verifies the Docker runtime, builds
+the job-dispatcher Docker image, verifies that the dispatcher image contains
+the Linux `diff-pdf` binary built by the same workflow run, and publishes the
+saved job-dispatcher image tarball to the GitHub release.
 
 ## Job dispatcher image
 
