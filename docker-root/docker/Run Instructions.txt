@@ -7,9 +7,12 @@
 # Copy test pdf files into /home/<user>/testpdfs
 # Go into the folder /home/<user>/testpdfs
 >> docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf>
+>> docker run --rm -v <mount folder full path>:/data diff-pdf-image <pdf-file-1> <pdf-file-2> <output-pdf> -verify
 
 Example:
 >> docker run --rm -v D:\Temp\_diff-pdf\pdfs:/data diff-pdf-image pdf_A.pdf pdf_B.pdf custom-diff.pdf
 >> docker run --rm -v /home/salt/testpdfs:/data diff-pdf-image 0217-101-001-C.pdf 0217-101-001-I.pdf diff.pdf
+>> docker run --rm -v /home/salt/testpdfs:/data diff-pdf-image 0217-101-001-C.pdf 0217-101-001-I.pdf output-diff.pdf -verify
 
 After completion, the <output-pdf> will be available in the mount folder
+When -verify is used, output-diff-expected.pdf must also be available in the mount folder.

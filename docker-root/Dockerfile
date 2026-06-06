@@ -39,7 +39,9 @@ COPY job-dispatcher/docker/bin/diff-pdf-b /usr/local/bin/diff-pdf-b
 RUN chmod +x /usr/local/bin/diff-pdf-b
 
 COPY docker-root/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
+COPY test/assert-output-pdf-matches-expected.sh /usr/local/bin/assert-output-pdf-matches-expected.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/assert-output-pdf-matches-expected.sh && \
+    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh /usr/local/bin/assert-output-pdf-matches-expected.sh
 
 WORKDIR /data
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
